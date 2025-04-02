@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bigdata-manager
+  labels:
+    name: bigdata-manager
+    app: bigdata-manager 

@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: bigdata-manager-agent
+  namespace: bigdata-manager
+  labels:
+    app: bigdata-manager
+    component: agent
+spec:
+  selector:
+    matchLabels:
+      app: bigdata-manager
+      component: agent
+  template:
+    metadata:
+      labels:
+        app: bigdata-manager
+        component: agent
+    spec:
+      containers:
+      - name: agent
+        image: ${REGISTRY}/bigdata-manager-agent:latest
+        imagePullPolicy: Always
+        env:
+        - name: SERVER_ADDRESS
+          value: "http://bigdata-manager-server:8080"
+        - name: HOST_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: HEARTBEAT_INTERVAL
+          value: "30"
+        - name: COLLECTION_INTERVAL
+          value: "60"
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: "256Mi"
+          requests:
+            cpu: "0.1"
+            memory: "128Mi"
+        volumeMounts:
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: sys
+          mountPath: /host/sys
+          readOnly: true
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+          readOnly: true
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock 

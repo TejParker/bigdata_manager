@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # 数据库服务
+  mysql:
+    image: mysql:8.0
+    container_name: bigdata-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-bigdata_manager}
+      MYSQL_USER: ${MYSQL_USER:-bigdata}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-bigdata123}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 后端API服务
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bigdata-manager-server:latest
+    container_name: bigdata-server
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER:-bigdata}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-bigdata123}
+      DB_NAME: ${MYSQL_DATABASE:-bigdata_manager}
+      JWT_SECRET: ${JWT_SECRET:-yoursecretkey}
+      LOG_LEVEL: info
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./configs:/app/configs
+
+  # 前端UI服务
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+      args:
+        - API_URL=http://localhost:8080
+    image: bigdata-manager-ui:latest
+    container_name: bigdata-ui
+    restart: always
+    depends_on:
+      - server
+    ports:
+      - "80:80"
+
+  # 演示用的Agent服务实例
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    image: bigdata-manager-agent:latest
+    container_name: bigdata-agent-demo
+    restart: always
+    depends_on:
+      - server
+    environment:
+      SERVER_ADDRESS: http://server:8080
+      HOST_ID: demo-host-1
+      HEARTBEAT_INTERVAL: "30"
+      COLLECTION_INTERVAL: "60"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  mysql-data: 

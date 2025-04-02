@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 全局自定义样式 */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#app {
+  height: 100%;
+}
+
+.page-container {
+  padding: 16px;
+}
+
+/* 自定义Arco Design主题样式 */
+:root {
+  --primary-color: #165dff;
+  --success-color: #00b42a;
+  --warning-color: #ff7d00;
+  --danger-color: #f53f3f;
+} 

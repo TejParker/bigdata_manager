@@ -1,0 +1,40 @@
+# Go编译产物
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go工作目录
+/bin/
+/pkg/
+
+# 依赖目录
+/vendor/
+
+# IDE和编辑器
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log
+
+# 环境变量和敏感信息
+.env
+*.env
+*.pem
+*.key
+
+# 项目特定
+/build/
+/dist/
+/tmp/ 

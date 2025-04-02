@@ -1,0 +1,76 @@
+# 服务器配置
+server:
+  # 服务器HTTP端口
+  port: 8080
+  # API路径前缀
+  api_prefix: "/api/v1"
+  # JWT密钥
+  jwt_secret: "your-jwt-secret-key-change-in-production"
+  # JWT令牌有效期(小时)
+  jwt_expiration: 24
+  # TLS配置
+  tls:
+    enabled: false
+    cert_file: "cert.pem"
+    key_file: "key.pem"
+
+# 数据库配置
+database:
+  driver: "mysql"
+  host: "localhost"
+  port: 3306
+  name: "bigdata_manager"
+  user: "root"
+  password: "password"
+  max_connections: 100
+  timeout: 10
+
+# 监控服务配置
+monitor:
+  # 指标收集间隔(秒)
+  collection_interval: 15
+  # 保留数据时间(天)
+  retention_days: 30
+  # 指标上传批量大小
+  batch_size: 100
+
+# 日志服务配置
+log:
+  # 日志保留时间(天)
+  retention_days: 7
+  # 日志文件路径
+  path: "/var/log/bigdata-manager"
+  # 日志级别
+  level: "info"
+
+# 告警配置
+alert:
+  # 是否启用邮件通知
+  email_enabled: false
+  smtp_server: "smtp.example.com"
+  smtp_port: 587
+  smtp_user: "alerts@example.com"
+  smtp_password: "password"
+  # 是否启用webhook通知
+  webhook_enabled: false
+  webhook_url: "https://hooks.example.com/services/XXX"
+
+# Agent配置
+agent:
+  # 心跳间隔(秒)
+  heartbeat_interval: 10
+  # 收集间隔(秒)
+  collection_interval: 15
+  # 重连间隔(秒)
+  reconnect_interval: 5
+  # 数据缓冲大小
+  buffer_size: 1000
+  # 日志目录
+  log_path: "/var/log/bigdata-manager-agent"
+
+# 安装包配置
+package:
+  # 软件包存储路径
+  repo_path: "/opt/bigdata-manager/packages"
+  # 临时文件路径
+  temp_path: "/tmp/bigdata-manager" 
