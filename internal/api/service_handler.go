@@ -2,12 +2,13 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"github.com/TejParker/bigdata-manager/internal/db"
 	"github.com/TejParker/bigdata-manager/pkg/model"
+	"github.com/gin-gonic/gin"
 )
 
 // CreateService 创建新服务
@@ -55,10 +56,10 @@ func CreateService(c *gin.Context) {
 	query := `INSERT INTO service 
 		(cluster_id, service_type, service_name, version, status) 
 		VALUES (?, ?, ?, ?, ?)`
-	result, err := tx.Exec(query, 
-		service.ClusterID, 
-		service.ServiceType, 
-		service.ServiceName, 
+	result, err := tx.Exec(query,
+		service.ClusterID,
+		service.ServiceType,
+		service.ServiceName,
 		service.Version,
 		"INSTALLING") // 初始状态为安装中
 	if err != nil {
@@ -79,9 +80,9 @@ func CreateService(c *gin.Context) {
 	taskQuery := `INSERT INTO task 
 		(task_type, related_id, related_type, status)
 		VALUES (?, ?, ?, ?)`
-	_, err = tx.Exec(taskQuery, 
-		"INSTALL_SERVICE", 
-		serviceID, 
+	_, err = tx.Exec(taskQuery,
+		"INSTALL_SERVICE",
+		serviceID,
 		"SERVICE",
 		"PENDING")
 	if err != nil {
@@ -123,16 +124,16 @@ func GetServices(c *gin.Context) {
 	// 构建查询条件
 	whereClause := ""
 	args := []interface{}{}
-	
+
 	if clusterID != "" {
 		whereClause += " WHERE s.cluster_id = ?"
 		args = append(args, clusterID)
-		
+
 		if serviceType != "" {
 			whereClause += " AND s.service_type = ?"
 			args = append(args, serviceType)
 		}
-		
+
 		if status != "" {
 			whereClause += " AND s.status = ?"
 			args = append(args, status)
@@ -141,7 +142,7 @@ func GetServices(c *gin.Context) {
 		if serviceType != "" {
 			whereClause += " WHERE s.service_type = ?"
 			args = append(args, serviceType)
-			
+
 			if status != "" {
 				whereClause += " AND s.status = ?"
 				args = append(args, status)
@@ -165,10 +166,10 @@ func GetServices(c *gin.Context) {
 	query := `SELECT s.id, s.service_type, s.service_name, s.version, s.status,
 		s.cluster_id, c.name as cluster_name, s.created_at, s.updated_at
 		FROM service s
-		LEFT JOIN cluster c ON s.cluster_id = c.id` + 
-		whereClause + 
+		LEFT JOIN cluster c ON s.cluster_id = c.id` +
+		whereClause +
 		" ORDER BY s.id DESC LIMIT ? OFFSET ?"
-	
+
 	args = append(args, pageSize, offset)
 	rows, err := db.DB.Query(query, args...)
 	if err != nil {
@@ -182,18 +183,18 @@ func GetServices(c *gin.Context) {
 		model.Service
 		ClusterName string `json:"cluster_name"`
 	}
-	
+
 	var services []ServiceWithCluster
 	for rows.Next() {
 		var service ServiceWithCluster
-		
+
 		if err := rows.Scan(
 			&service.ID, &service.ServiceType, &service.ServiceName, &service.Version, &service.Status,
 			&service.ClusterID, &service.ClusterName, &service.CreatedAt, &service.UpdatedAt); err != nil {
 			ResponseError(c, http.StatusInternalServerError, "读取服务数据失败")
 			return
 		}
-		
+
 		services = append(services, service)
 	}
 
@@ -220,17 +221,17 @@ func GetServiceById(c *gin.Context) {
 		FROM service s
 		LEFT JOIN cluster c ON s.cluster_id = c.id
 		WHERE s.id = ?`
-	
+
 	type ServiceWithCluster struct {
 		model.Service
 		ClusterName string `json:"cluster_name"`
 	}
-	
+
 	var service ServiceWithCluster
 	err = db.DB.QueryRow(query, serviceID).Scan(
 		&service.ID, &service.ServiceType, &service.ServiceName, &service.Version, &service.Status,
 		&service.ClusterID, &service.ClusterName, &service.CreatedAt, &service.UpdatedAt)
-	
+
 	if err == sql.ErrNoRows {
 		ResponseError(c, http.StatusNotFound, "服务不存在")
 		return
@@ -244,19 +245,19 @@ func GetServiceById(c *gin.Context) {
 	componentsQuery := `SELECT id, service_id, component_type, desired_instances, created_at, updated_at
 		FROM service_component
 		WHERE service_id = ?`
-	
+
 	componentRows, err := db.DB.Query(componentsQuery, serviceID)
 	if err != nil {
 		ResponseError(c, http.StatusInternalServerError, "查询服务组件失败")
 		return
 	}
 	defer componentRows.Close()
-	
+
 	var components []model.ServiceComponent
 	for componentRows.Next() {
 		var component model.ServiceComponent
 		if err := componentRows.Scan(
-			&component.ID, &component.ServiceID, &component.ComponentType, 
+			&component.ID, &component.ServiceID, &component.ComponentType,
 			&component.DesiredInstances, &component.CreatedAt, &component.UpdatedAt); err != nil {
 			ResponseError(c, http.StatusInternalServerError, "读取组件数据失败")
 			return
@@ -268,20 +269,20 @@ func GetServiceById(c *gin.Context) {
 	configQuery := `SELECT id, scope_type, scope_id, config_key, config_value, version, is_current, created_at, updated_at
 		FROM config
 		WHERE scope_type = 'SERVICE' AND scope_id = ? AND is_current = true`
-	
+
 	configRows, err := db.DB.Query(configQuery, serviceID)
 	if err != nil {
 		ResponseError(c, http.StatusInternalServerError, "查询服务配置失败")
 		return
 	}
 	defer configRows.Close()
-	
+
 	var configs []model.Config
 	for configRows.Next() {
 		var config model.Config
 		var isCurrent bool
 		if err := configRows.Scan(
-			&config.ID, &config.ScopeType, &config.ScopeID, &config.ConfigKey, 
+			&config.ID, &config.ScopeType, &config.ScopeID, &config.ConfigKey,
 			&config.ConfigValue, &config.Version, &isCurrent, &config.CreatedAt, &config.UpdatedAt); err != nil {
 			ResponseError(c, http.StatusInternalServerError, "读取配置数据失败")
 			return
@@ -330,7 +331,7 @@ func UpdateService(c *gin.Context) {
 		service_name = ?,
 		version = ?
 		WHERE id = ?`
-	_, err = db.DB.Exec(updateQuery, 
+	_, err = db.DB.Exec(updateQuery,
 		service.ServiceName,
 		service.Version,
 		serviceID)
@@ -682,7 +683,7 @@ func DeployComponent(c *gin.Context) {
 	var req struct {
 		HostIDs []int `json:"host_ids" binding:"required"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		ResponseError(c, http.StatusBadRequest, "无效的请求参数")
 		return
@@ -775,7 +776,7 @@ func DeployComponent(c *gin.Context) {
 // RegisterServiceRoutes 注册服务相关路由
 func RegisterServiceRoutes(router *gin.RouterGroup) {
 	router.Use(JWTAuthMiddleware())
-	
+
 	// 需要服务查看权限的接口
 	viewRouter := router.Group("/")
 	viewRouter.Use(PrivilegeMiddleware("VIEW_SERVICE"))
@@ -783,7 +784,7 @@ func RegisterServiceRoutes(router *gin.RouterGroup) {
 		viewRouter.GET("/services", GetServices)
 		viewRouter.GET("/services/:id", GetServiceById)
 	}
-	
+
 	// 需要服务管理权限的接口
 	manageRouter := router.Group("/")
 	manageRouter.Use(PrivilegeMiddleware("MANAGE_SERVICE"))
@@ -794,11 +795,11 @@ func RegisterServiceRoutes(router *gin.RouterGroup) {
 		manageRouter.DELETE("/services/:id", DeleteService)
 		manageRouter.POST("/services/:id/start", StartService)
 		manageRouter.POST("/services/:id/stop", StopService)
-		
+
 		// 组件管理
 		manageRouter.POST("/services/:id/components", AddServiceComponent)
 		manageRouter.PUT("/components/:component_id", UpdateServiceComponent)
 		manageRouter.DELETE("/components/:component_id", DeleteServiceComponent)
 		manageRouter.POST("/components/:component_id/deploy", DeployComponent)
 	}
-} 
+}
