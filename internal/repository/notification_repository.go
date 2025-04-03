@@ -1,9 +1,8 @@
 package repository
 
 import (
+	"github.com/TejParker/bigdata-manager/internal/model"
 	"gorm.io/gorm"
-
-	"bigdata_manager/internal/model"
 )
 
 // NotificationConfigRepository 通知配置仓库
