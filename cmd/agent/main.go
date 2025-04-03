@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/TejParker/bigdata-manager/pkg/model"
 	"log"
 	"net/http"
 	"os"
@@ -13,7 +14,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/TejParker/bigdata-manag
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/load"
