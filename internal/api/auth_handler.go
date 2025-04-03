@@ -3,10 +3,10 @@ package api
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/TejParker/bigdata-manager/internal/auth"
 	"github.com/TejParker/bigdata-manager/internal/db"
 	"github.com/TejParker/bigdata-manager/pkg/model"
+	
 )
 
 // Login 用户登录处理
@@ -44,10 +44,13 @@ func GetUserInfo(c *gin.Context) {
 	username := c.GetString("username")
 
 	var user model.User
-	query := "SELECT id, username, email, phone, status, created_at, updated_at FROM user WHERE id = ?"
+	user.ID = userID
+	user.Username = username
+
+	// 查询用户的其他信息
+	query := "SELECT email, phone, status, created_at, updated_at FROM user WHERE id = ?"
 	err := db.DB.QueryRow(query, userID).Scan(
-		&user.ID, &user.Username, &user.Email, &user.Phone,
-		&user.Status, &user.CreatedAt, &user.UpdatedAt,
+		&user.Email, &user.Phone, &user.Status, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		ResponseError(c, http.StatusInternalServerError, "获取用户信息失败")
@@ -112,7 +115,7 @@ func ChangePassword(c *gin.Context) {
 		username     string
 		passwordHash string
 	)
-	
+
 	query := "SELECT username, password_hash FROM user WHERE id = ?"
 	err := db.DB.QueryRow(query, userID).Scan(&username, &passwordHash)
 	if err != nil {
@@ -146,7 +149,7 @@ func ChangePassword(c *gin.Context) {
 // RegisterAuthRoutes 注册认证相关路由
 func RegisterAuthRoutes(router *gin.RouterGroup) {
 	router.POST("/login", Login)
-	
+
 	// 以下路由需要认证
 	authRouter := router.Group("/")
 	authRouter.Use(JWTAuthMiddleware())
@@ -154,4 +157,4 @@ func RegisterAuthRoutes(router *gin.RouterGroup) {
 		authRouter.GET("/user/info", GetUserInfo)
 		authRouter.POST("/user/change-password", ChangePassword)
 	}
-} 
+}

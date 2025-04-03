@@ -13,12 +13,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/TejParker/bigdata-manag
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/load"
 	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/shirou/gopsutil/v3/process"
-	"github.com/TejParker/bigdata-manager/pkg/model"
 )
 
 var (
@@ -129,9 +129,9 @@ func sendHeartbeat() {
 
 	// 解析响应
 	var heartbeatResp struct {
-		Success  bool                `json:"success"`
-		Message  string              `json:"message"`
-		Data     map[string]any      `json:"data"`
+		Success  bool                 `json:"success"`
+		Message  string               `json:"message"`
+		Data     map[string]any       `json:"data"`
 		Commands []model.AgentCommand `json:"commands,omitempty"`
 	}
 
@@ -233,7 +233,7 @@ func collectComponentStatus() []model.ComponentStatus {
 				cp.Status = "UNKNOWN"
 			} else {
 				// 根据进程状态设置组件状态
-				if status == "R" || status == "S" {
+				if len(status) > 0 && (status[0] == "R" || status[0] == "S") {
 					cp.Status = "RUNNING"
 				} else {
 					cp.Status = "STOPPED"
@@ -357,7 +357,7 @@ func handleConfigure(cmd model.AgentCommand) (bool, string, any) {
 	// TODO: 实现配置逻辑
 	componentID, _ := cmd.Payload["component_id"].(float64)
 	configMap, _ := cmd.Payload["config"].(map[string]any)
-	
+
 	log.Printf("正在配置组件 %d, 配置项数量: %d", int(componentID), len(configMap))
 
 	// 在实际实现中，这里会修改配置文件
@@ -396,4 +396,4 @@ func sendCommandResponse(commandID string, success bool, message string, result 
 	if httpResp.StatusCode != http.StatusOK {
 		log.Printf("命令响应返回错误状态码: %d", httpResp.StatusCode)
 	}
-} 
+}
