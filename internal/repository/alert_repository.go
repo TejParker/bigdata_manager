@@ -1,11 +1,10 @@
 package repository
 
 import (
+	"github.com/TejParker/bigdata-manager/internal/model"
 	"time"
 
 	"gorm.io/gorm"
-
-	"bigdata_manager/internal/model"
 )
 
 // AlertRuleRepository 告警规则仓库

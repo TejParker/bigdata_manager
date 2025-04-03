@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/TejParker/bigdata-manager/internal/model"
+	"github.com/TejParker/bigdata-manager/internal/repository"
 	"strconv"
 	"strings"
 	"time"
 
 	"gorm.io/gorm"
-
-	"bigdata_manager/internal/model"
-	"bigdata_manager/internal/repository"
 )
 
 // AlertService 处理告警规则和事件
@@ -242,4 +241,4 @@ func (s *AlertService) GetAlertStatistics() (map[string]interface{}, error) {
 		"today":       todayCount,
 		"total":       statusCounts["OPEN"] + statusCounts["ACKNOWLEDGED"] + statusCounts["RESOLVED"],
 	}, nil
-} 
+}
