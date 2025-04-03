@@ -9,7 +9,7 @@
 
 # Go工作目录
 /bin/
-/pkg/
+#pkg/
 
 # 依赖目录
 /vendor/
